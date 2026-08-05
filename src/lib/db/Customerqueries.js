@@ -14,6 +14,14 @@ export async function getCustomerById(id) {
   return rows[0] || null;
 }
 
+export async function getCustomerbycredentials(email , password){
+  const [rows] = await db.query(
+    'SELECT * FROM CUSTOMERS WHERE email = ? and password = ?',
+    [email , password]
+  );
+  return rows[0] || null;
+}
+
 export async function createCustomer({ Fname, Lname, Cnic, Phonenumber, Email, Password }) {
   const [result] = await db.query(
     `INSERT INTO CUSTOMERS (Fname, Lname, Cnic, Phonenumber, Email, Password)

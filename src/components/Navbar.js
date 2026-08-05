@@ -7,9 +7,11 @@ const navbar = () => {
   return (
     <div className='w-screen bg-neutral-900 p-3 pl-5 flex items-center gap-3'>
       <div className='size-10 '>
-        <Image src={logo} alt="logo"
-          className = "object-contain rounded-lg "
-        />
+        <Link href ="/">
+          <Image src={logo} alt="logo"
+            className = "object-contain rounded-lg "
+          />
+        </Link>
       </div>
       <div className='font-bold lg:flex items-center gap-1'>
         <h1 className='font-bold text-white'>
