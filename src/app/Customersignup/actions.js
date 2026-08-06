@@ -1,6 +1,6 @@
 "use server";
 
-import { createCustomer } from "@/lib/db/Customerqueries";
+import { createCustomer } from "@/lib/db/Users";
 import { redirect } from "next/navigation";
 
 export async function handleRegister(prevState, formData) {

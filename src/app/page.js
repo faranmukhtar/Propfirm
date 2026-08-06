@@ -6,7 +6,7 @@ import psxicon from '@/assets/charticon.png'
 import secpicon from '@/assets/secpicon.png'
 import portfolioicon from '@/assets/portfoliogrowicon.png'
 import Image from 'next/image'
-import { getTotalInvestedCapital , gettopstocks } from '@/lib/db/Stockqueries'
+import { getTotalInvestedCapital , gettopstocks } from '@/lib/db/Positions'
 
 
 async function getmovementpercentage(num){
