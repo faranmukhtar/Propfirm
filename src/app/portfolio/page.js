@@ -2,49 +2,117 @@ import { db } from '@/lib/db';
 import { getLatestPrice } from '@/lib/psx/psx';
 import InnerNav from '@/components/InnerNav';
 
+
 async function getUserPortfolio(traderId) {
-  // 1. Get stock holdings from Database
-  const [rows] = await db.query(
-    'SELECT Stockid, Symbol, Companyname, Quantity, BuyingPrice FROM stocks WHERE Traderid = ?',
-    [traderId]
-  );
 
-  if (!rows || rows.length === 0) return [];
+  // Get trader holdings
+  const { data: rows, error } = await db
+    .from('positions')
+    .select(`
+      id,
+      qty,
+      buy_price,
+      instrument_id,
+      instruments (
+        symbol,
+        company_name
+      )
+    `)
+    .eq('trader_id', traderId);
 
-  // 2. Fetch PSX prices in parallel with fallback error handling
+
+  if (error) {
+    console.error('Portfolio fetch error:', error);
+    throw error;
+  }
+
+
+  if (!rows || rows.length === 0) {
+    return [];
+  }
+
+
   const portfolioWithPrices = await Promise.all(
+
     rows.map(async (stock) => {
-      // Safely parse numbers (MySQL DECIMAL types often return as strings)
-      const buyingPrice = Number(stock.BuyingPrice) || 0;
-      const quantity = Number(stock.Quantity) || 0;
+
+      const buyingPrice = Number(stock.buy_price) || 0;
+      const quantity = Number(stock.qty) || 0;
+
+      const symbol = stock.instruments.symbol;
+      const companyName = stock.instruments.company_name;
+
+
       let livePrice = buyingPrice;
 
+
       try {
-        const fetchedPrice = await getLatestPrice(stock.Symbol);
-        if (fetchedPrice !== null && !isNaN(fetchedPrice)) {
+
+        const fetchedPrice = await getLatestPrice(symbol);
+
+        if (
+          fetchedPrice !== null &&
+          !isNaN(fetchedPrice)
+        ) {
           livePrice = Number(fetchedPrice);
         }
+
       } catch (err) {
-        console.error(`Failed to fetch live price for ${stock.Symbol}:`, err);
+
+        console.error(
+          `Failed to fetch live price for ${symbol}:`,
+          err
+        );
+
       }
 
-      const totalInvestment = quantity * buyingPrice;
-      const currentValue = quantity * livePrice;
-      const profitLoss = currentValue - totalInvestment;
-      const profitLossPercent = totalInvestment > 0 ? (profitLoss / totalInvestment) * 100 : 0;
+
+      const totalInvestment =
+        quantity * buyingPrice;
+
+
+      const currentValue =
+        quantity * livePrice;
+
+
+      const profitLoss =
+        currentValue - totalInvestment;
+
+
+      const profitLossPercent =
+        totalInvestment > 0
+          ? (profitLoss / totalInvestment) * 100
+          : 0;
+
 
       return {
-        ...stock,
+
+        id: stock.id,
+
+        Symbol: symbol,
+
+        Companyname: companyName,
+
         Quantity: quantity,
+
         BuyingPrice: buyingPrice,
+
         currentPrice: livePrice,
+
         totalInvestment,
+
         currentValue,
+
         profitLoss,
-        profitLossPercent,
+
+        profitLossPercent
+
       };
+
     })
+
   );
+
 
   return portfolioWithPrices;
 }

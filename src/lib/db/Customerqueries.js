@@ -1,33 +1,138 @@
-import { db } from './index';
+import db from './index';
+import { createClient } from '@/lib/supabase/server';
 
+
+// Get all customers
 export async function getallCustomers() {
-  const [rows] = await db.query('SELECT * FROM CUSTOMERS');
-  return rows;
+  const { data, error } = await db
+    .from('customers')
+    .select(`
+      *,
+      users (*)
+    `);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
+
+// Get customer by ID
 export async function getCustomerById(id) {
-  // Added space between 'await' and 'db'
-  const [rows] = await db.query(
-    'SELECT * FROM CUSTOMERS WHERE Customerid = ?',
-    [id]
-  );
-  return rows[0] || null;
+  const { data, error } = await db
+    .from('customers')
+    .select(`
+      *,
+      users (*)
+    `)
+    .eq('user_id', id)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    throw error;
+  }
+
+  return data || null;
 }
 
-export async function getCustomerbycredentials(email , password){
-  const [rows] = await db.query(
-    'SELECT * FROM CUSTOMERS WHERE email = ? and password = ?',
-    [email , password]
-  );
-  return rows[0] || null;
+
+// Login customer
+export async function getCustomerbycredentials(email, password) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (authError || !user) {
+    return null;
+  }
+
+  const { data, error } = await db
+    .from('users')
+    .select(`
+      *,
+      customers (*)
+    `)
+    .eq('auth_user_id', user.id)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
-export async function createCustomer({ Fname, Lname, Cnic, Phonenumber, Email, Password }) {
-  const [result] = await db.query(
-    `INSERT INTO CUSTOMERS (Fname, Lname, Cnic, Phonenumber, Email, Password)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [Fname, Lname, Cnic, Phonenumber, Email, Password] // Fixed: comma added, all 6 values included
-  );
-  
-  return result.insertId;
+
+// Create customer
+export async function createCustomer({
+  Fname,
+  Lname,
+  Cnic,
+  Phonenumber,
+  Email,
+  Password
+}) {
+  const supabase = await createClient();
+
+  // Create authentication account
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.signUp({
+    email: Email,
+    password: Password
+  });
+
+  if (authError) {
+    throw authError;
+  }
+
+  if (!user) {
+    throw new Error('Failed to create authentication account.');
+  }
+
+
+  // Create application user
+  const { data: appUser, error: userError } = await db
+    .from('users')
+    .insert({
+      auth_user_id: user.id,
+      fname: Fname,
+      lname: Lname,
+      cnic: Cnic,
+      phonenumber: Phonenumber,
+      email: Email,
+      role_id: 1
+    })
+    .select('id')
+    .single();
+
+  if (userError) {
+    throw userError;
+  }
+
+
+  // Create customer profile
+  const { error: customerError } = await db
+    .from('customers')
+    .insert({
+      user_id: appUser.id,
+      balance: 0,
+      kyc_status: 'pending'
+    });
+
+  if (customerError) {
+    throw customerError;
+  }
+
+
+  return appUser.id;
 }

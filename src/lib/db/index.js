@@ -1,27 +1,17 @@
 // src/lib/db/index.js
-import mysql from 'mysql2/promise';
 
-const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'your_database_name',
-  waitForConnections: true,
-  connectionLimit: 10, // Limits maximum active connections
-  queueLimit: 0,
-};
+import { createClient } from '@supabase/supabase-js'
 
-// Reuse existing pool across Next.js reloads in development
-let pool;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-if (process.env.NODE_ENV === 'development') {
-  if (!global._mysqlPool) {
-    global._mysqlPool = mysql.createPool(poolConfig);
-  }
-  pool = global._mysqlPool;
-} else {
-  pool = mysql.createPool(poolConfig);
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables')
 }
 
-export const db = pool;
-export default pool;
+export const db = createClient(
+  supabaseUrl,
+  supabaseKey
+)
+
+export default db

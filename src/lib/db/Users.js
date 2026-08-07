@@ -1,44 +1,66 @@
+import { createClient } from '@/lib/supabase/server';
 import db from './index';
-import bcrypt from 'bcrypt';
 
-const CUSTOMER_ROLE_ID = 1; // matches Roles table row: 1 = Customer
+const CUSTOMER_ROLE_ID = 1;
 
-export async function createCustomer({ Fname, Lname, Cnic, Phonenumber, Email, Password }) {
-  const connection = await db.getConnection();
+export async function createCustomer({
+  Fname,
+  Lname,
+  Cnic,
+  Phonenumber,
+  Email,
+  Password
+}) {
+  const supabase = await createClient();
 
-  try {
-    await connection.beginTransaction();
+  // Create authentication account
+  const {
+    data: { user },
+    error: authError
+  } = await supabase.auth.signUp({
+    email: Email,
+    password: Password
+  });
 
-    const passwordHash = await bcrypt.hash(Password, 10);
-
-    const [userResult] = await connection.query(
-      `INSERT INTO Users (fname, lname, cnic, email, phonenumber, role_id, password_hash)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [Fname, Lname, Cnic, Email, Phonenumber, CUSTOMER_ROLE_ID, passwordHash]
-    );
-
-    const userId = userResult.insertId;
-
-    await connection.query(
-      `INSERT INTO Customers (user_id, balance, kyc_status)
-       VALUES (?, 0, 'pending')`,
-      [userId]
-    );
-
-    await connection.commit();
-    return userId;
-
-  } catch (error) {
-    await connection.rollback();
-
-    // Cnic/Email UNIQUE constraint violations surface here
-    if (error.code === 'ER_DUP_ENTRY') {
-      throw new Error('An account with this CNIC or email already exists.');
-    }
-
-    throw error;
-
-  } finally {
-    connection.release();
+  if (authError) {
+    throw authError;
   }
+
+  if (!user) {
+    throw new Error('Failed to create authentication account.');
+  }
+
+  // Create application user
+  const { data: appUser, error: userError } = await db
+    .from('users')
+    .insert({
+      auth_user_id: user.id,
+      fname: Fname,
+      lname: Lname,
+      cnic: Cnic,
+      email: Email,
+      phonenumber: Phonenumber,
+      role_id: CUSTOMER_ROLE_ID
+    })
+    .select('id')
+    .single();
+
+  if (userError) {
+    throw userError;
+  }
+
+  // Create customer profile
+  const { error: customerError } = await db
+    .from('customers')
+    .insert({
+      user_id: appUser.id,
+      balance: 0,
+      kyc_status: 'pending'
+    });
+
+  if (customerError) {
+    throw customerError;
+  }
+
+  return appUser.id;
 }
