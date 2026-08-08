@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import wallet from "@/assets/walleticon.png";
 import InnerNav from "@/components/InnerNav";
+import charticon from "@/assets/charticon.png";
 
 const page = () => {
   return (
@@ -45,13 +46,13 @@ const page = () => {
 
 
       {/* Main Cards */}
-      <div className="w-full lg:w-2/3 mx-auto px-4 sm:px-8 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="w-full lg:w-2/3 mx-auto px-4 sm:px-15 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8 ">
 
         {/* Wallet */}
         <div className="w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-emerald-800 to-emerald-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500 cursor-pointer">
 
           <Image
-            className="rounded-xl mb-3"
+            className="rounded-xl mb-3 w-1/4"
             src={wallet}
             alt="Wallet"
             loading="eager"
@@ -78,8 +79,8 @@ const page = () => {
           <div className="w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-blue-900 to-blue-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-blue-500 cursor-pointer">
 
             <Image
-              className="rounded-xl mb-3"
-              src={wallet}
+              className="rounded-xl mb-3 w-1/4"
+              src={charticon}
               alt="Stock Portfolio"
             />
 
