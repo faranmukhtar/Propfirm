@@ -63,7 +63,7 @@ const page = async () => {
               </h1>
             </div>
             <div className='pt-[3vh] text-[20px] font-semibold'>
-              <Link href = "Customersignup" className='text-white bg-emerald-500 hover:bg-emerald-400 p-4.5 rounded-xl pl-6.5 pr-6.5' >
+              <Link href = "customersignup" className='text-white bg-emerald-500 hover:bg-emerald-400 p-4.5 rounded-xl pl-6.5 pr-6.5' >
                 Start Investing → 
               </Link>
           </div>

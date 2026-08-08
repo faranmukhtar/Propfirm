@@ -16,7 +16,7 @@ export default async function PortfolioPage() {
   }= await supabase.auth.getUser();
 
   if(!user){
-    redirect('/Customerlogin');
+    redirect('/customerlogin');
   } 
 
   const { data: appUser, error } = await db

@@ -22,10 +22,10 @@ const navbar = () => {
         </h1>
       </div>
       <div className='flex items-center gap-6 ml-auto pr-2 font-medium'>
-        <Link href = "/Customerlogin" className='text-gray-400  hover:bg-gray-700 p-1.5 rounded-xl pl-3.5 pr-3.5 ' >
+        <Link href = "/customerlogin" className='text-gray-400  hover:bg-gray-700 p-1.5 rounded-xl pl-3.5 pr-3.5 ' >
           Login
         </Link>
-        <Link href = "/Customersignup" className='text-white bg-emerald-500 hover:bg-emerald-400 p-1.5 rounded-xl pl-3.5 pr-3.5' >
+        <Link href = "/customersignup" className='text-white bg-emerald-500 hover:bg-emerald-400 p-1.5 rounded-xl pl-3.5 pr-3.5' >
           Sign up
         </Link>
                 

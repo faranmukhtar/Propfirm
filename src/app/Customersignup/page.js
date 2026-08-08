@@ -62,7 +62,7 @@ export default function RegisterPage() {
       <div className="px-4">
         <div className="w-full max-w-md mx-auto mt-6 sm:mt-10 p-4 sm:p-6 bg-neutral-800 border border-neutral-700 rounded-lg shadow-sm text-black">
           <div className='p-2 bg-neutral-700 w-full h-14 sm:h-15 rounded-xl mb-5 flex gap-2 sm:gap-10 align-middle justify-center items-center'>
-            <Link href="/Customerlogin" className="flex-1 text-center py-3 px-4 text-neutral-400 font-semibold hover:text-white text-sm sm:text-base">
+            <Link href="/customerlogin" className="flex-1 text-center py-3 px-4 text-neutral-400 font-semibold hover:text-white text-sm sm:text-base">
             Login
             </Link>
             <div className='bg-emerald-500 flex-1 text-center py-3 px-4 rounded-xl text-white font-semibold text-sm sm:text-base'>Sign up</div>

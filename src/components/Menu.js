@@ -11,7 +11,7 @@ export default function Menu({isOpen , onClose , children}){
             <div className = "relative w-[300px] rounded-2xl bg-neutral-900 p-4 pt-5 m-3 shadow-xl border border-neutral-700">
                 <button onClick={onClose}
                     className='absolute top-4 right-4 text-gray-400 hover:text-white text-xl'>
-                    X
+                    x
                 </button>
         
                 <div className="font-bold flex items-center gap-1">

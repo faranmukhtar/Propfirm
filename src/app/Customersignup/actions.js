@@ -37,5 +37,5 @@ export async function handleRegister(prevState, formData) {
     };
   }
 
-  redirect("/Customerlogin");
+  redirect("/customerlogin");
 }

@@ -54,6 +54,7 @@ const page = () => {
             className="rounded-xl mb-3"
             src={wallet}
             alt="Wallet"
+            loading="eager"
           />
 
           <h1 className="text-white font-bold text-[20px]">
@@ -72,7 +73,7 @@ const page = () => {
 
 
         {/* Stock Portfolio */}
-        <Link href="/Portfolio">
+        <Link href="/portfolio">
 
           <div className="w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-blue-900 to-blue-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-blue-500 cursor-pointer">
 

@@ -22,7 +22,7 @@ const InnerNav = () => {
         </p>
       </Popup>
 
-      <Link href="Customerdashboard" className="flex items-center gap-3">
+      <Link href="customerdashboard" className="flex items-center gap-3">
         <div className="size-10">
           <Image
             src={logo}

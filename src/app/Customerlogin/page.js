@@ -31,7 +31,7 @@ export default function RegisterPage() {
           Login
           </div>
           
-          <Link href="/Customersignup" className='flex-1 text-center py-3 px-4 text-neutral-400 font-semibold hover:text-white text-sm sm:text-base'>
+          <Link href="/customersignup" className='flex-1 text-center py-3 px-4 text-neutral-400 font-semibold hover:text-white text-sm sm:text-base'>
             Sign up
         </Link>
         </div>
