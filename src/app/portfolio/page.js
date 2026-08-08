@@ -1,132 +1,62 @@
 import { db } from '@/lib/db'; 
 import { getLatestPrice } from '@/lib/psx/psx';
 import InnerNav from '@/components/InnerNav';
+import { createClient } from '@/lib/supabase/server';
+import {getallpositions , getpositionsbyid} from '@/lib/db/Positions'
+import {gettotalinvestments , getCustomerById}from '@/lib/db/Customerqueries'
+import { redirect } from 'next/navigation';
+import {getTraderById} from '@/lib/db/Traderqueries'
+import AddStockPopup from "@/components/Addstockpopup";
 
+export default async function PortfolioPage() {
+  const supabase = await createClient();
 
-async function getUserPortfolio(traderId) {
+  const {
+    data: {user}
+  }= await supabase.auth.getUser();
 
-  // Get trader holdings
-  const { data: rows, error } = await db
-    .from('positions')
-    .select(`
-      id,
-      qty,
-      buy_price,
-      instrument_id,
-      instruments (
-        symbol,
-        company_name
-      )
-    `)
-    .eq('trader_id', traderId);
+  if(!user){
+    redirect('/Customerlogin');
+  } 
 
+  const { data: appUser, error } = await db
+    .from('users')
+    .select('*')
+    .eq('auth_user_id', user.id)
+    .single();
 
   if (error) {
-    console.error('Portfolio fetch error:', error);
     throw error;
   }
 
-
-  if (!rows || rows.length === 0) {
-    return [];
+  let userdetails = null;
+  let totalValue = 0;
+  let totalInvested = 0;
+  let portfolio = await getallpositions();
+  const role = appUser.role_id;
+  if (role === 1){
+    userdetails = await getCustomerById(appUser.id);
+    totalInvested = userdetails.balance;
+  }
+  else if(role === 2){
+    userdetails = await getTraderById(appUser.id);
+    totalInvested = userdetails.allocated_limit - userdetails.balance
+    portfolio = await getpositionsbyid(appUser.id);
   }
 
 
-  const portfolioWithPrices = await Promise.all(
-
-    rows.map(async (stock) => {
-
-      const buyingPrice = Number(stock.buy_price) || 0;
-      const quantity = Number(stock.qty) || 0;
-
-      const symbol = stock.instruments.symbol;
-      const companyName = stock.instruments.company_name;
-
-
-      let livePrice = buyingPrice;
-
-
-      try {
-
-        const fetchedPrice = await getLatestPrice(symbol);
-
-        if (
-          fetchedPrice !== null &&
-          !isNaN(fetchedPrice)
-        ) {
-          livePrice = Number(fetchedPrice);
-        }
-
-      } catch (err) {
-
-        console.error(
-          `Failed to fetch live price for ${symbol}:`,
-          err
-        );
-
-      }
-
-
-      const totalInvestment =
-        quantity * buyingPrice;
-
-
-      const currentValue =
-        quantity * livePrice;
-
-
-      const profitLoss =
-        currentValue - totalInvestment;
-
-
-      const profitLossPercent =
-        totalInvestment > 0
-          ? (profitLoss / totalInvestment) * 100
-          : 0;
-
-
-      return {
-
-        id: stock.id,
-
-        Symbol: symbol,
-
-        Companyname: companyName,
-
-        Quantity: quantity,
-
-        BuyingPrice: buyingPrice,
-
-        currentPrice: livePrice,
-
-        totalInvestment,
-
-        currentValue,
-
-        profitLoss,
-
-        profitLossPercent
-
-      };
-
-    })
-
+  // Calculate Overall Portfolio Totals
+  
+  totalInvested = portfolio.reduce(
+    (total, stock) =>
+      total + Number(stock.qty) * Number(stock.buy_price),
+    0
   );
 
-
-  return portfolioWithPrices;
-}
-
-export default async function PortfolioPage() {
-  // Replace with dynamic user/trader ID from session/auth
-  const traderId = 1;
-  const portfolio = await getUserPortfolio(traderId);
-
-  // Calculate Overall Portfolio Totals
-  const totalInvested = 60000;
-  const totalValue = 63000;
-  const totalProfitLoss = totalValue - totalInvested;
+  const totalProfitLoss = 10;
   const totalProfitLossPercent = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+    
+
 
   return (
     <div>
@@ -138,7 +68,7 @@ export default async function PortfolioPage() {
           </h1>
 
           {/* Portfolio Summary Card */}
-          <div className="mb-8">
+          <div className="mb-3">
             <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl w-full">
               <p className="text-sm text-gray-400 font-medium">Total Investment</p>
 
@@ -172,7 +102,23 @@ export default async function PortfolioPage() {
               </div>
             </div>
           </div>
-
+          {role !== 2 && (
+            <div className='flex align-middle justify-center gap-[1/2] font-semibold'>
+              <div className='m-3 mb-5 bg-emerald-800 p-3  w-1/3 rounded-2xl hover:bg-emerald-500 '>
+                <AddStockPopup traderId={appUser.id} w-full>
+                  <button
+                    type="button"
+                    className='p-3 w-full  '>
+                  
+                    Add Stock
+                  </button>
+                </AddStockPopup>
+              </div>
+              <button className='m-3 mb-5 bg-yellow-600 p-3  w-1/3 rounded-2xl hover:bg-yellow-500 '>
+                <h1>Request Instrument approval</h1>
+              </button>
+            </div>
+          )}
           {/* Holdings Table */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
             <h2 className="p-4 text-xl font-semibold border-b border-neutral-800">Holdings</h2>

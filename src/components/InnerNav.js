@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import logo from "@/assets/logo.png";
-import { Menu } from "lucide-react";
+import Link from "next/link";
+import {Menu } from "lucide-react";
 import Popup from "@/components/Menu";
 
 const InnerNav = () => {
@@ -17,23 +18,24 @@ const InnerNav = () => {
       <Popup isOpen={open} onClose={() => setOpen(false)}>
         <h1 className="text-2xl font-bold text-white">Sign In</h1>
         <p className="text-gray-400 mt-2">
-          Put any content here.
+          
         </p>
       </Popup>
 
-      <div className="size-10">
-        <Image
-          src={logo}
-          alt="logo"
-          className="object-contain rounded-lg"
-        />
-      </div>
+      <Link href="Customerdashboard" className="flex items-center gap-3">
+        <div className="size-10">
+          <Image
+            src={logo}
+            alt="logo"
+            className="object-contain rounded-lg"
+          />
+        </div>
 
-      <div className="font-bold lg:flex items-center gap-1">
-        <h1 className="text-white">ABC</h1>
-        <h1 className="text-emerald-400">INVESTMENTS</h1>
-      </div>
-
+        <div className="font-bold md:flex items-center gap-1">
+          <h1 className="text-white">ABC</h1>
+          <h1 className="text-emerald-400">INVESTMENTS</h1>
+        </div>
+      </Link>
       
     </div>
   );

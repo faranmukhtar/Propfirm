@@ -136,3 +136,28 @@ export async function createCustomer({
 
   return appUser.id;
 }
+
+
+
+export async function gettotalinvestments() {
+  try {
+    const { data, error } = await db
+      .from('customers')
+      .select('balance');
+
+    if (error) {
+      throw error;
+    }
+
+    const total = data.reduce(
+      (sum, customer) => sum + Number(customer.balance || 0),
+      0
+    );
+
+    return total;
+
+  } catch (error) {
+    console.error('Error calculating total investments:', error);
+    throw error;
+  }
+}
