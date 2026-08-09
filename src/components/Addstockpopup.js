@@ -48,7 +48,7 @@ export default function AddStockPopup({ traderId, children }) {
         traderId,
         Number(instrumentId),
         Number(qty),
-        Number(buyPrice)
+        Number(buyPrice),
       );
 
       setInstrumentId("");
@@ -74,7 +74,7 @@ export default function AddStockPopup({ traderId, children }) {
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") openPopup();
         }}
-        className="cursor-pointer"
+        className="cursor-pointer w-full h-full"
       >
         {children}
       </div>
@@ -82,13 +82,9 @@ export default function AddStockPopup({ traderId, children }) {
       {/* POPUP */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-
           <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
-
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">
-                Add Stock
-              </h2>
+              <h2 className="text-2xl font-bold text-white">Add Stock</h2>
 
               <button
                 type="button"
@@ -100,7 +96,6 @@ export default function AddStockPopup({ traderId, children }) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-
               {/* INSTRUMENT DROPDOWN */}
               <div>
                 <label className="mb-2 block text-sm text-gray-400">
@@ -121,10 +116,7 @@ export default function AddStockPopup({ traderId, children }) {
                   </option>
 
                   {instruments.map((instrument) => (
-                    <option
-                      key={instrument.id}
-                      value={instrument.id}
-                    >
+                    <option key={instrument.id} value={instrument.id}>
                       {instrument.symbol} - {instrument.company_name}
                     </option>
                   ))}
@@ -165,15 +157,10 @@ export default function AddStockPopup({ traderId, children }) {
               </div>
 
               {/* ERROR */}
-              {error && (
-                <p className="text-sm text-red-400">
-                  {error}
-                </p>
-              )}
+              {error && <p className="text-sm text-red-400">{error}</p>}
 
               {/* BUTTONS */}
               <div className="flex justify-end gap-3 pt-4">
-
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
@@ -189,9 +176,7 @@ export default function AddStockPopup({ traderId, children }) {
                 >
                   {loading ? "Adding..." : "Add Stock"}
                 </button>
-
               </div>
-
             </form>
           </div>
         </div>

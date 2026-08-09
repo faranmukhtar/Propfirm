@@ -6,8 +6,8 @@
 // export async function getStocksByTrader(traderId) {
 //   try {
 //     const [rows] = await db.query(
-//       `SELECT Stockid, Traderid, Companyname, Symbol, Quantity, BuyingPrice 
-//        FROM stocks 
+//       `SELECT Stockid, Traderid, Companyname, Symbol, Quantity, BuyingPrice
+//        FROM stocks
 //        WHERE Traderid = ?`,
 //       [traderId]
 //     );
@@ -24,8 +24,8 @@
 // export async function getStockBySymbol(traderId, symbol) {
 //   try {
 //     const [rows] = await db.query(
-//       `SELECT Stockid, Symbol, Companyname, Quantity, BuyingPrice 
-//        FROM stocks 
+//       `SELECT Stockid, Symbol, Companyname, Quantity, BuyingPrice
+//        FROM stocks
 //        WHERE Traderid = ? AND Symbol = ?`,
 //       [traderId, symbol.toUpperCase()]
 //     );
@@ -53,8 +53,8 @@
 //       const newAvgPrice = (totalOldCost + totalNewCost) / combinedQty;
 
 //       const [result] = await db.query(
-//         `UPDATE stocks 
-//          SET Quantity = ?, BuyingPrice = ? 
+//         `UPDATE stocks
+//          SET Quantity = ?, BuyingPrice = ?
 //          WHERE Stockid = ?`,
 //         [combinedQty, newAvgPrice.toFixed(2), existing.Stockid]
 //       );
@@ -62,7 +62,7 @@
 //     } else {
 //       // Insert new stock position
 //       const [result] = await db.query(
-//         `INSERT INTO stocks (Traderid, Companyname, Symbol, Quantity, BuyingPrice) 
+//         `INSERT INTO stocks (Traderid, Companyname, Symbol, Quantity, BuyingPrice)
 //          VALUES (?, ?, ?, ?, ?)`,
 //         [traderId, companyName, symbol.toUpperCase(), newQty, newPrice]
 //       );

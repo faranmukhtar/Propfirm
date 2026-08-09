@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
-import db from './index';
+import { createClient } from "@/lib/supabase/server";
+import db from "./index";
 
 const CUSTOMER_ROLE_ID = 1;
 
@@ -9,17 +9,17 @@ export async function createCustomer({
   Cnic,
   Phonenumber,
   Email,
-  Password
+  Password,
 }) {
   const supabase = await createClient();
 
   // Create authentication account
   const {
     data: { user },
-    error: authError
+    error: authError,
   } = await supabase.auth.signUp({
     email: Email,
-    password: Password
+    password: Password,
   });
 
   if (authError) {
@@ -27,12 +27,12 @@ export async function createCustomer({
   }
 
   if (!user) {
-    throw new Error('Failed to create authentication account.');
+    throw new Error("Failed to create authentication account.");
   }
 
   // Create application user
   const { data: appUser, error: userError } = await db
-    .from('users')
+    .from("users")
     .insert({
       auth_user_id: user.id,
       fname: Fname,
@@ -40,9 +40,9 @@ export async function createCustomer({
       cnic: Cnic,
       email: Email,
       phonenumber: Phonenumber,
-      role_id: CUSTOMER_ROLE_ID
+      role_id: CUSTOMER_ROLE_ID,
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (userError) {
@@ -50,13 +50,11 @@ export async function createCustomer({
   }
 
   // Create customer profile
-  const { error: customerError } = await db
-    .from('customers')
-    .insert({
-      user_id: appUser.id,
-      balance: 0,
-      kyc_status: 'pending'
-    });
+  const { error: customerError } = await db.from("customers").insert({
+    user_id: appUser.id,
+    balance: 0,
+    kyc_status: "pending",
+  });
 
   if (customerError) {
     throw customerError;

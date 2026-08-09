@@ -13,7 +13,7 @@ export async function handleRegister(prevState, formData) {
 
   if (String(Password).trim() !== String(ConfirmPassword).trim()) {
     return {
-      error: "Passwords do not match"
+      error: "Passwords do not match",
     };
   }
 
@@ -33,7 +33,7 @@ export async function handleRegister(prevState, formData) {
   } catch (error) {
     console.error("MySQL Error during customer registration:", error);
     return {
-      error: "Registration failed"
+      error: "Registration failed",
     };
   }
 

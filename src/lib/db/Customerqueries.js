@@ -1,12 +1,9 @@
-import db from './index';
-import { createClient } from '@/lib/supabase/server';
-
+import db from "./index";
+import { createClient } from "@/lib/supabase/server";
 
 // Get all customers
 export async function getallCustomers() {
-  const { data, error } = await db
-    .from('customers')
-    .select(`
+  const { data, error } = await db.from("customers").select(`
       *,
       users (*)
     `);
@@ -18,25 +15,25 @@ export async function getallCustomers() {
   return data;
 }
 
-
 // Get customer by ID
 export async function getCustomerById(id) {
   const { data, error } = await db
-    .from('customers')
-    .select(`
+    .from("customers")
+    .select(
+      `
       *,
       users (*)
-    `)
-    .eq('user_id', id)
+    `,
+    )
+    .eq("user_id", id)
     .single();
 
-  if (error && error.code !== 'PGRST116') {
+  if (error && error.code !== "PGRST116") {
     throw error;
   }
 
   return data || null;
 }
-
 
 // Login customer
 export async function getCustomerbycredentials(email, password) {
@@ -44,10 +41,10 @@ export async function getCustomerbycredentials(email, password) {
 
   const {
     data: { user },
-    error: authError
+    error: authError,
   } = await supabase.auth.signInWithPassword({
     email,
-    password
+    password,
   });
 
   if (authError || !user) {
@@ -55,12 +52,14 @@ export async function getCustomerbycredentials(email, password) {
   }
 
   const { data, error } = await db
-    .from('users')
-    .select(`
+    .from("users")
+    .select(
+      `
       *,
       customers (*)
-    `)
-    .eq('auth_user_id', user.id)
+    `,
+    )
+    .eq("auth_user_id", user.id)
     .single();
 
   if (error) {
@@ -70,7 +69,6 @@ export async function getCustomerbycredentials(email, password) {
   return data;
 }
 
-
 // Create customer
 export async function createCustomer({
   Fname,
@@ -78,17 +76,17 @@ export async function createCustomer({
   Cnic,
   Phonenumber,
   Email,
-  Password
+  Password,
 }) {
   const supabase = await createClient();
 
   // Create authentication account
   const {
     data: { user },
-    error: authError
+    error: authError,
   } = await supabase.auth.signUp({
     email: Email,
-    password: Password
+    password: Password,
   });
 
   if (authError) {
@@ -96,13 +94,12 @@ export async function createCustomer({
   }
 
   if (!user) {
-    throw new Error('Failed to create authentication account.');
+    throw new Error("Failed to create authentication account.");
   }
-
 
   // Create application user
   const { data: appUser, error: userError } = await db
-    .from('users')
+    .from("users")
     .insert({
       auth_user_id: user.id,
       fname: Fname,
@@ -110,40 +107,32 @@ export async function createCustomer({
       cnic: Cnic,
       phonenumber: Phonenumber,
       email: Email,
-      role_id: 1
+      role_id: 1,
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (userError) {
     throw userError;
   }
 
-
   // Create customer profile
-  const { error: customerError } = await db
-    .from('customers')
-    .insert({
-      user_id: appUser.id,
-      balance: 0,
-      kyc_status: 'pending'
-    });
+  const { error: customerError } = await db.from("customers").insert({
+    user_id: appUser.id,
+    balance: 0,
+    kyc_status: "pending",
+  });
 
   if (customerError) {
     throw customerError;
   }
 
-
   return appUser.id;
 }
 
-
-
 export async function gettotalinvestments() {
   try {
-    const { data, error } = await db
-      .from('customers')
-      .select('balance');
+    const { data, error } = await db.from("customers").select("balance");
 
     if (error) {
       throw error;
@@ -151,13 +140,12 @@ export async function gettotalinvestments() {
 
     const total = data.reduce(
       (sum, customer) => sum + Number(customer.balance || 0),
-      0
+      0,
     );
 
     return total;
-
   } catch (error) {
-    console.error('Error calculating total investments:', error);
+    console.error("Error calculating total investments:", error);
     throw error;
   }
 }
