@@ -4,11 +4,20 @@ import Image from "next/image";
 import wallet from "@/assets/walleticon.png";
 import InnerNav from "@/components/InnerNav";
 import charticon from "@/assets/charticon.png";
+import { createClient } from "@/lib/supabase/server";
+import {getuserbyid}from "@/lib/db/Users"
 
-const page = () => {
+const page = async() => {
+   const supabase = await createClient();
+  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const cuser = await getuserbyid(user.id)
   return (
     <div className="min-h-screen bg-black">
-      <InnerNav />
+      <InnerNav user={cuser} />
 
       {/* Stats */}
       <div className="w-full px-4 flex flex-wrap justify-center gap-5 py-8">

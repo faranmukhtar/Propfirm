@@ -7,7 +7,7 @@ import { Menu } from "lucide-react";
 import Popup from "@/components/Menu";
 
 
-const InnerNav = () => {
+const InnerNav = ({user}) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -16,10 +16,15 @@ const InnerNav = () => {
         className="hover:bg-gray-700 rounded-xl h-10 w-10 p-2"
         onClick={() => setOpen(true)}
       >
-        <Menu size={24} color="gray" />
+        <Menu size={24} color="gray" user ={user} />
       </button>
 
-      <Popup isOpen={open} onClose={() => setOpen(false)}>
+      <Popup
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        user={user}
+      >
+        
         <h1 className="text-2xl font-bold text-white">Sign In</h1>
         <p className="text-gray-400 mt-2"></p>
       </Popup>

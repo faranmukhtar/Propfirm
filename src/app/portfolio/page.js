@@ -1,13 +1,16 @@
-import { db } from "@/lib/db";
-import { getLatestPrice } from "@/lib/psx/psx";
 import InnerNav from "@/components/InnerNav";
 import { createClient } from "@/lib/supabase/server";
 import { getallpositions, getpositionsbyid } from "@/lib/db/Positions";
-import { gettotalinvestments, getCustomerById } from "@/lib/db/Customerqueries";
+import { getCustomerById } from "@/lib/db/Customerqueries";
 import { redirect } from "next/navigation";
 import { getTraderById } from "@/lib/db/Traderqueries";
+import { getuserbyid } from "@/lib/db/Users";
 import AddStockPopup from "@/components/Addstockpopup";
-import RequestInstrumentapproval from "@/components/RequestInstrumentapproval"
+import RequestInstrumentapproval from "@/components/RequestInstrumentapproval";
+
+function formatPKR(value) {
+  return `PKR ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+}
 
 export default async function PortfolioPage() {
   const supabase = await createClient();
@@ -20,33 +23,22 @@ export default async function PortfolioPage() {
     redirect("/customerlogin");
   }
 
-  const { data: appUser, error } = await db
-    .from("users")
-    .select("*")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  let userdetails = null;
-  let totalValue = 0;
-  let totalInvested = 0;
-  let portfolio = await getallpositions();
+  const appUser = await getuserbyid(user.id);
   const role = appUser.role_id;
-  if (role === 1) {
-    userdetails = await getCustomerById(appUser.id);
-    totalInvested = userdetails.balance;
-  } else if (role === 2) {
-    userdetails = await getTraderById(appUser.id);
-    totalInvested = userdetails.allocated_limit - userdetails.balance;
-    portfolio = await getpositionsbyid(appUser.id);
-  }
+  const isCustomer = role === 1;
+  const isTrader = role === 2;
 
-  // Calculate Overall Portfolio Totals
+  const portfolio = isTrader
+    ? await getpositionsbyid(appUser.id)
+    : await getallpositions();
 
-  totalInvested = portfolio.reduce(
+  const userdetails = isCustomer
+    ? await getCustomerById(appUser.id)
+    : isTrader
+      ? await getTraderById(appUser.id)
+      : null;
+
+  const totalInvested = portfolio.reduce(
     (total, stock) => total + Number(stock.qty) * Number(stock.buy_price),
     0,
   );
@@ -54,10 +46,11 @@ export default async function PortfolioPage() {
   const totalProfitLoss = 10;
   const totalProfitLossPercent =
     totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+  const isProfitable = totalProfitLoss >= 0;
 
   return (
     <div>
-      <InnerNav />
+      <InnerNav user={appUser} />
       <div className="w-full min-h-screen bg-black text-white flex justify-center p-6">
         <div className="w-full max-w-7xl">
           <h1 className="text-3xl font-bold mb-6 text-emerald-400">
@@ -72,12 +65,7 @@ export default async function PortfolioPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-4">
-                <p className="text-4xl font-bold">
-                  PKR{" "}
-                  {totalInvested.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
-                </p>
+                <p className="text-4xl font-bold">{formatPKR(totalInvested)}</p>
 
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-2">
@@ -94,28 +82,20 @@ export default async function PortfolioPage() {
 
               {/* Profit / Loss Readout */}
               <div className="mt-4 flex items-baseline gap-3">
-                <p
-                  className={`text-2xl font-bold ${totalProfitLoss >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                >
-                  {totalProfitLoss >= 0 ? "+" : ""}
-                  PKR{" "}
-                  {totalProfitLoss.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
+                <p className={`text-2xl font-bold ${isProfitable ? "text-emerald-400" : "text-red-400"}`}>
+                  {isProfitable ? "+" : ""}
+                  {formatPKR(totalProfitLoss)}
                 </p>
-                <span
-                  className={`text-sm font-semibold ${totalProfitLoss >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                >
-                  ({totalProfitLoss >= 0 ? "+" : ""}
-                  {totalProfitLossPercent.toFixed(2)}%)
+                <span className={`text-sm font-semibold ${isProfitable ? "text-emerald-400" : "text-red-400"}`}>
+                  ({isProfitable ? "+" : ""}{totalProfitLossPercent.toFixed(2)}%)
                 </span>
               </div>
             </div>
           </div>
-          {role !== 1 && (
-            <div className="flex align-middle justify-center gap-[1/2] font-semibold ">
 
-              <div className="  m-3 mb-5 bg-emerald-800  w-1/3 h-16  rounded-2xl hover:bg-emerald-500 flex items-center justify-center">
+          {!isCustomer && (
+            <div className="flex align-middle justify-center gap-[1/2] font-semibold">
+              <div className="m-3 mb-5 bg-emerald-800 w-1/3 h-16 rounded-2xl hover:bg-emerald-500 flex items-center justify-center">
                 <AddStockPopup traderId={appUser.id} className="w-full h-full">
                   <button
                     type="button"
@@ -125,9 +105,8 @@ export default async function PortfolioPage() {
                   </button>
                 </AddStockPopup>
               </div>
-          
 
-              {role === 2 && (
+              {isTrader && (
                 <div className="m-3 mb-5 w-1/3 h-16 rounded-2xl bg-yellow-600 hover:bg-yellow-500">
                   <RequestInstrumentapproval>
                     <button
@@ -140,11 +119,10 @@ export default async function PortfolioPage() {
                     </button>
                   </RequestInstrumentapproval>
                 </div>
-
-               )}
+              )}
             </div>
-               
           )}
+
           {/* Holdings Table */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
             <h2 className="p-4 text-xl font-semibold border-b border-neutral-800">
@@ -173,38 +151,18 @@ export default async function PortfolioPage() {
 
                   <tbody className="divide-y divide-neutral-800">
                     {portfolio.map((stock) => (
-                      <tr
-                        key={stock.Stockid}
-                        className="hover:bg-neutral-800/50 transition-colors"
-                      >
-                        <td className="p-4 font-bold text-emerald-400">
-                          {stock.Symbol}
-                        </td>
-                        <td className="p-4 text-gray-300">
-                          {stock.Companyname}
-                        </td>
+                      <tr key={stock.Stockid} className="hover:bg-neutral-800/50 transition-colors">
+                        <td className="p-4 font-bold text-emerald-400">{stock.Symbol}</td>
+                        <td className="p-4 text-gray-300">{stock.Companyname}</td>
                         <td className="p-4">{stock.Quantity}</td>
-                        <td className="p-4">
-                          PKR {stock.BuyingPrice.toFixed(2)}
-                        </td>
-                        <td className="p-4 font-semibold">
-                          PKR {stock.currentPrice.toFixed(2)}
-                        </td>
-                        <td className="p-4">
-                          PKR{" "}
-                          {stock.currentValue.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td
-                          className={`p-4 font-semibold ${stock.profitLoss >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                        >
+                        <td className="p-4">PKR {stock.BuyingPrice.toFixed(2)}</td>
+                        <td className="p-4 font-semibold">PKR {stock.currentPrice.toFixed(2)}</td>
+                        <td className="p-4">{formatPKR(stock.currentValue)}</td>
+                        <td className={`p-4 font-semibold ${stock.profitLoss >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                           {stock.profitLoss >= 0 ? "+" : ""}
                           {stock.profitLoss.toFixed(2)}
                         </td>
-                        <td
-                          className={`p-4 font-semibold ${stock.profitLossPercent >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                        >
+                        <td className={`p-4 font-semibold ${stock.profitLossPercent >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                           {stock.profitLossPercent >= 0 ? "+" : ""}
                           {stock.profitLossPercent.toFixed(2)}%
                         </td>

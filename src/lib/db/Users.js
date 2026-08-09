@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import db from "./index";
 
-const CUSTOMER_ROLE_ID = 1;
+
 
 export async function createCustomer({
   Fname,
@@ -61,4 +61,20 @@ export async function createCustomer({
   }
 
   return appUser.id;
+}
+
+
+export async function getuserbyid(id) {
+  const { data, error } = await db
+    .from("users")
+    .select("*")
+    .eq("auth_user_id", id)
+    .single();
+
+  if (error) {
+    console.error("Error getting user:", error);
+    throw error;
+  }
+
+  return data;
 }
