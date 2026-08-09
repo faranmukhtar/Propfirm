@@ -30,12 +30,13 @@ export async function handleRegister(prevState, formData) {
       Email,
       Password,
     });
-  } catch (error) {
-    console.error("MySQL Error during customer registration:", error);
-    return {
-      error: "Registration failed",
-    };
-  }
+      } catch (error) {
+      console.error("Registration error:", error);
+
+      return {
+        error: error?.message || "Registration failed",
+      };
+    }
 
   redirect("/customerlogin");
 }
