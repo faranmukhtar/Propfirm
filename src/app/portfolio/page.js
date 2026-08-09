@@ -8,6 +8,7 @@ import { getuserbyid } from "@/lib/db/Users";
 import AddStockPopup from "@/components/Addstockpopup";
 import RequestInstrumentapproval from "@/components/RequestInstrumentapproval";
 
+
 function formatPKR(value) {
   return `PKR ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
@@ -28,24 +29,54 @@ export default async function PortfolioPage() {
   const isCustomer = role === 1;
   const isTrader = role === 2;
 
-  const portfolio = isTrader
+  const rawPortfolio = isTrader
     ? await getpositionsbyid(appUser.id)
     : await getallpositions();
 
+  // Ensure portfolio is an array even if the DB returns null
+  const portfolio = rawPortfolio || [];
+
+  console.log("MY DATABASE ROW LOOKS LIKE THIS:", portfolio[0]);
   const userdetails = isCustomer
     ? await getCustomerById(appUser.id)
     : isTrader
       ? await getTraderById(appUser.id)
       : null;
 
-  const totalInvested = portfolio.reduce(
-    (total, stock) => total + Number(stock.qty) * Number(stock.buy_price),
-    0,
-  );
+  const enrichedPortfolio = portfolio.map((stock) => {
+    const qty = Number(stock.qty || stock.Quantity || 0);
+    const buyPrice = Number(stock.buy_price || stock.BuyingPrice || 0);
+    const currentPrice = Number(stock.current_price || stock.currentPrice || buyPrice);
 
-  const totalProfitLoss = 10;
-  const totalProfitLossPercent =
-    totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+    const investedValue = qty * buyPrice;
+    const currentValue = qty * currentPrice;
+    const profitLoss = currentValue - investedValue;
+    const profitLossPercent = investedValue > 0 ? (profitLoss / investedValue) * 100 : 0;
+
+    // Read directly from the joined relation object
+    const symbol = stock.instruments?.symbol || "N/A";
+    const company = stock.instruments?.company_name || stock.instruments?.name || "Unknown";
+
+    return {
+      ...stock,
+      safeId: stock.id || Math.random().toString(),
+      safeSymbol: symbol,
+      safeCompany: company,
+      safeQty: qty,
+      safeBuyPrice: buyPrice,
+      safeCurrentPrice: currentPrice,
+      currentValue,
+      profitLoss,
+      profitLossPercent,
+    };
+  });
+    
+
+  // 2. Calculate dynamic totals using the clean data
+  const totalInvested = enrichedPortfolio.reduce((sum, stock) => sum + (stock.safeQty * stock.safeBuyPrice), 0);
+  const totalCurrentValue = enrichedPortfolio.reduce((sum, stock) => sum + stock.currentValue, 0);
+  const totalProfitLoss = totalCurrentValue - totalInvested;
+  const totalProfitLossPercent = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
   const isProfitable = totalProfitLoss >= 0;
 
   return (
@@ -94,7 +125,7 @@ export default async function PortfolioPage() {
           </div>
 
           {!isCustomer && (
-            <div className="flex align-middle justify-center gap-[1/2] font-semibold">
+            <div className="flex align-middle justify-center gap-2 font-semibold">
               <div className="m-3 mb-5 bg-emerald-800 w-1/3 h-16 rounded-2xl hover:bg-emerald-500 flex items-center justify-center">
                 <AddStockPopup traderId={appUser.id} className="w-full h-full">
                   <button
@@ -130,7 +161,7 @@ export default async function PortfolioPage() {
             </h2>
 
             <div className="max-h-[500px] overflow-auto">
-              {portfolio.length === 0 ? (
+              {enrichedPortfolio.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   No stock holdings found in your portfolio.
                 </div>
@@ -150,19 +181,19 @@ export default async function PortfolioPage() {
                   </thead>
 
                   <tbody className="divide-y divide-neutral-800">
-                    {portfolio.map((stock) => (
-                      <tr key={stock.Stockid} className="hover:bg-neutral-800/50 transition-colors">
-                        <td className="p-4 font-bold text-emerald-400">{stock.Symbol}</td>
-                        <td className="p-4 text-gray-300">{stock.Companyname}</td>
-                        <td className="p-4">{stock.Quantity}</td>
-                        <td className="p-4">PKR {stock.BuyingPrice.toFixed(2)}</td>
-                        <td className="p-4 font-semibold">PKR {stock.currentPrice.toFixed(2)}</td>
+                    {enrichedPortfolio.map((stock) => (
+                      <tr key={stock.safeId} className="hover:bg-neutral-800/50 transition-colors">
+                        <td className="p-4 font-bold text-emerald-400">{stock.safeSymbol}</td>
+                        <td className="p-4 text-gray-300">{stock.safeCompany}</td>
+                        <td className="p-4">{stock.safeQty}</td>
+                        <td className="p-4">PKR {stock.safeBuyPrice.toFixed(2)}</td>
+                        <td className="p-4 font-semibold">PKR {stock.safeCurrentPrice.toFixed(2)}</td>
                         <td className="p-4">{formatPKR(stock.currentValue)}</td>
-                        <td className={`p-4 font-semibold ${stock.profitLoss >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        <td className={`p-4 font-semibold ${stock.profitLoss >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           {stock.profitLoss >= 0 ? "+" : ""}
                           {stock.profitLoss.toFixed(2)}
                         </td>
-                        <td className={`p-4 font-semibold ${stock.profitLossPercent >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        <td className={`p-4 font-semibold ${stock.profitLossPercent >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           {stock.profitLossPercent >= 0 ? "+" : ""}
                           {stock.profitLossPercent.toFixed(2)}%
                         </td>

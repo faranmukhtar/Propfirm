@@ -51,12 +51,18 @@ export async function getTotalInvestedCapital() {
 
 export async function getallpositions() {
   try {
-    const { data, error } = await db.from("positions").select("*");
+    const { data, error } = await db
+      .from("positions")
+      .select(`
+        *,
+        instruments (
+          id,
+          symbol,
+          company_name
+        )
+      `);
 
-    if (error) {
-      throw error;
-    }
-
+    if (error) throw error;
     return data;
   } catch (error) {
     console.error("Error getting positions:", error);
@@ -64,20 +70,24 @@ export async function getallpositions() {
   }
 }
 
-export async function getpositionsbyid(id) {
+export async function getpositionsbyid(traderId) {
   try {
     const { data, error } = await db
       .from("positions")
-      .select("*")
-      .eq("trader_id", id);
+      .select(`
+        *,
+        instruments (
+          id,
+          symbol,
+          company_name
+        )
+      `)
+      .eq("trader_id", traderId);
 
-    if (error) {
-      throw error;
-    }
-
+    if (error) throw error;
     return data;
   } catch (error) {
-    console.error("Error getting positions:", error);
+    console.error(`Error getting positions for trader ${traderId}:`, error);
     throw error;
   }
 }

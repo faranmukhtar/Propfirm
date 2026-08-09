@@ -34,3 +34,24 @@ export async function getinstrumentbysymbol(SYM) {
     throw error;
   }
 }
+
+
+
+export async function getinstrumentbyid(id) {
+  try {
+    const { data, error } = await db
+      .from("instruments")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Instrument is not approved yet:", error);
+    throw error;
+  }
+}

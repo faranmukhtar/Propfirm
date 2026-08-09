@@ -61,19 +61,29 @@ export default function Menu({ isOpen, onClose, user }) {
               {user?.email}
             </p>
           </div>
+          {user?.role_id === 2 && (
+            <div
+                
+                className="mt-2 ml-auto w-1/4 rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-center font-semibold text-amber-300 transition-all duration-200 "
+            >
+                Trader
+            </div>
+        )}
         </div>
 
         <hr className="mt-7 -mx-6 w-auto border-0 border-t border-neutral-700" />
-
-
         {/* Become Trader */}
-        <button
-          type="button"
-          onClick={() => setShowTraderRequest(true)}
-          className="mt-6 w-full rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-center font-semibold text-amber-300 transition-all duration-200 hover:border-amber-400/50 hover:bg-amber-500/20"
-        >
-          Request to Become a Trader
-        </button>
+        {user?.role_id === 1 && (
+            <button
+                type="button"
+                onClick={() => setShowTraderRequest(true)}
+                className="mt-6 w-full rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-center font-semibold text-amber-300 transition-all duration-200 hover:border-amber-400/50 hover:bg-amber-500/20"
+            >
+                Request to Become a Trader
+            </button>
+        )}
+
+        
 
         {/* Dashboard */}
      <div className="mt-5 w-full">
@@ -144,7 +154,7 @@ export default function Menu({ isOpen, onClose, user }) {
             </button>
         </form>
     </div>
-    
+
     </div>
 
       {/* TRADER REQUEST POPUP */}
