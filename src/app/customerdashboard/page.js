@@ -4,8 +4,10 @@ import Image from "next/image";
 import wallet from "@/assets/walleticon.png";
 import InnerNav from "@/components/InnerNav";
 import charticon from "@/assets/charticon.png";
-import { createClient } from "@/lib/supabase/server";
 import {getuserbyid}from "@/lib/db/Users"
+import { Users , ChartNoAxesCombined , Layers } from 'lucide-react';
+import { createClient } from "@/lib/supabase/server";
+
 
 const page = async() => {
    const supabase = await createClient();
@@ -14,7 +16,8 @@ const page = async() => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const cuser = await getuserbyid(user.id)
+  const cuser = await getuserbyid(user.id);
+  const role = cuser.role_id;
   return (
     <div className="min-h-screen bg-black">
       <InnerNav user={cuser} />
@@ -38,47 +41,122 @@ const page = async() => {
       </div>
 
       {/* Main Cards */}
-      <div className="w-full lg:w-2/3 mx-auto px-4 sm:px-15 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8 ">
+      <div className="w-full lg:w-4/5 mx-auto px-4 sm:px-15 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8 ">
         {/* Wallet */}
-        <div className="w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-emerald-800 to-emerald-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500 cursor-pointer">
-          <Image
-            className="rounded-xl mb-3 w-1/4"
-            src={wallet}
-            alt="Wallet"
-            loading="eager"
-          />
-
-          <h1 className="text-white font-bold text-[20px]">My Wallet</h1>
-
-          <p className="text-neutral-200">
-            Manage your funds, request withdrawals, and add investment
-          </p>
-
-          <p className="text-emerald-300 mt-4">Open &gt;</p>
-        </div>
-
-        {/* Stock Portfolio */}
-        <Link href="/portfolio">
-          <div className="w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-blue-900 to-blue-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-blue-500 cursor-pointer">
+        <Link href = "/wallet " className="group ">
+          <div className="flex gap-6 w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-emerald-800 to-emerald-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500 cursor-pointer">
             <Image
-              className="rounded-xl mb-3 w-1/4"
-              src={charticon}
-              alt="Stock Portfolio"
+              className="rounded-xl size-20 my-auto"
+              src={wallet}
+              alt="Wallet"
+              loading="eager"
             />
 
-            <h1 className="text-white font-bold text-[20px]">
-              Stock Portfolio
-            </h1>
+            <div>
+              <h1 className="text-white font-bold text-[20px]">My Wallet</h1>
 
-            <p className="text-neutral-200">
-              View PSX stock holdings, performance and positions
-            </p>
+              <p className="text-neutral-200">
+                Manage your funds, request withdrawals, and add investment
+              </p>
 
-            <p className="text-emerald-300 mt-4">Open &gt;</p>
+              <div className="flex items-center gap-2 mt-5 text-emerald-400 font-medium text-sm group-hover:gap-3 transition-all">
+                <span>Manage Customers</span>
+                <span>→</span>
+              </div> 
+            </div>
           </div>
         </Link>
-      </div>
+
+
+        {/* Stock Portfolio */}
+        <Link href="/portfolio" className="group">
+          <div className="gap-6 w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-blue-900 to-blue-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-blue-500 cursor-pointer flex items-center">
+            <div className="bg-blue-950 p-4 rounded-2xl">
+              <ChartNoAxesCombined size={50} color="#0b51ad" />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-[20px]">
+                Stock Portfolio
+              </h1>
+
+              <p className="text-neutral-200">
+                View PSX stock holdings, performance and positions
+              </p>
+
+              <div className="flex items-center gap-2 mt-5 text-[#2a99f4] font-medium text-sm">
+                <span>Your Portfolio</span>
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </Link>
+     
+      {role === 3 &&(
+      <Link href="/customers" className="group">
+          <div className="gap-6 w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-amber-600 to-yellow-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-amber-500 cursor-pointer flex items-center">
+            <div className="p-4 rounded-xl bg-amber-700 flex items-center justify-center mb-4">
+              <Users
+              size={50}
+              className="text-[#ffcb0f]"
+              strokeWidth={2}
+            />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-[20px]">
+                 Customers
+              </h1>
+
+              <p className="text-neutral-200">
+                  View and manage customer accounts, investments, and activity.
+              </p>
+
+               <div className="flex items-center gap-2 mt-5 text-[#ffcb0f] font-medium text-sm group-hover:gap-3 transition-all">
+                <span>Manage Customers</span>
+                <span>→</span>
+              </div>
+            </div>
+
+          </div>
+        </Link>
+      )}
+      {role === 3 &&(
+        <Link href="/instruments" className="group">
+          <div className="gap-6 w-full min-h-[220px] p-8 sm:p-10 bg-gradient-to-r from-violet-800 to-purple-950 rounded-2xl border border-transparent transition-all duration-200 hover:-translate-y-1 hover:border-violet-400 cursor-pointer flex items-center">
+
+            <div className="p-4 rounded-xl bg-purple-950 flex items-center justify-center">
+              <Layers
+                size={50}
+                className="text-[#a78bfa]"
+                strokeWidth={2}
+              />
+            </div>
+
+            <div>
+              <h1 className="text-white font-bold text-[20px]">
+                Instruments
+              </h1>
+
+              <p className="text-neutral-200">
+                Add / Remove acceptable instruments.
+              </p>
+
+              <div className="flex items-center gap-2 mt-5 text-[#a78bfa] font-medium text-sm">
+                <span>Manage Instruments</span>
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </Link>
+
+      )}
     </div>
+  </div>
   );
 };
 

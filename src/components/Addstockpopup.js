@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { addPosition } from "@/lib/db/Positions";
-import { getallinstruments } from "@/lib/db/Instruments";
+import { getallapprovedinstruments } from "@/lib/db/Instruments";
 
 export default function AddStockPopup({ traderId, children }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function AddStockPopup({ traderId, children }) {
       try {
         setLoadingInstruments(true);
 
-        const data = await getallinstruments();
+        const data = await getallapprovedinstruments();
 
         setInstruments(data || []);
       } catch (error) {

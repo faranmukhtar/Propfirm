@@ -61,12 +61,21 @@ export default function Menu({ isOpen, onClose, user }) {
               {user?.email}
             </p>
           </div>
-          {user?.role_id === 2 && (
+        {user?.role_id === 2 && (
             <div
                 
                 className="mt-2 ml-auto w-1/4 rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-center font-semibold text-amber-300 transition-all duration-200 "
             >
                 Trader
+            </div>
+        )}
+        
+        {user?.role_id === 3 && (
+            <div
+                
+                className="mt-2 ml-auto w-1/4 rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-center font-semibold text-amber-300 transition-all duration-200 "
+            >
+                Owner
             </div>
         )}
         </div>
@@ -137,6 +146,36 @@ export default function Menu({ isOpen, onClose, user }) {
             Settings
         </Link>
     </div>  
+
+    {(user.role_id === 3 || user.role_id === 4) && (
+     <div className="mt-5 w-full">
+        <Link
+            href="/instruments"
+            className={`block w-full border-b-2 px-3 py-3 text-left font-semibold transition-colors ${
+            pathname === "/instruments"
+                ? "border-yellow-400 text-yellow-400"
+                : "border-transparent text-white hover:border-yellow-400 hover:text-yellow-400"
+            }`}
+        >
+            Instruments
+        </Link>
+    </div>
+    )}
+
+    {(user.role_id === 3 || user.role_id === 4) && (
+    <div className="mt-5 w-full">
+        <Link
+            href="/users"
+            className={`block w-full border-b-2 px-3 py-3 text-left font-semibold transition-colors ${
+            pathname === "/users"
+                ? "border-yellow-400 text-yellow-400"
+                : "border-transparent text-white hover:border-yellow-400 hover:text-yellow-400"
+            }`}
+        >
+            Users
+        </Link>
+    </div>
+    )}
     
 
   {/* Your logo, user info, dashboard, etc. */}
