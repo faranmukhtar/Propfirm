@@ -1,11 +1,15 @@
 import db from "./index";
 
+// lib/db/Positions.js
+
 export async function gettopstocks() {
   try {
     const { data, error } = await db.from("positions").select(`
-        instrument_id,
         qty,
-        buy_price
+        buy_price,
+        instruments (
+          symbol
+        )
       `);
 
     if (error) {
@@ -15,17 +19,28 @@ export async function gettopstocks() {
     const totals = {};
 
     data.forEach((row) => {
-      if (!totals[row.instrument_id]) {
-        totals[row.instrument_id] = 0;
+      // Extract symbol from the joined instruments table
+      const symbol = row.instruments?.symbol;
+      if (!symbol) return;
+
+      if (!totals[symbol]) {
+        totals[symbol] = { totalCost: 0, totalQty: 0 };
       }
 
-      totals[row.instrument_id] += row.qty * row.buy_price;
+      totals[symbol].totalCost += row.qty * row.buy_price;
+      totals[symbol].totalQty += row.qty;
     });
 
+    // Return array of objects with symbol and calculated average buy price
     return Object.entries(totals)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .map(([instrument_id]) => Number(instrument_id));
+      .map(([symbol, metrics]) => ({
+        symbol: symbol,
+        avgBuyPrice: metrics.totalQty > 0 ? metrics.totalCost / metrics.totalQty : 0,
+        totalInvested: metrics.totalCost,
+      }))
+      .sort((a, b) => b.totalInvested - a.totalInvested)
+      .slice(0, 4);
+      
   } catch (error) {
     console.error("Error fetching top stock symbols:", error);
     throw error;

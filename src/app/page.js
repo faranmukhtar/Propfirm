@@ -1,3 +1,4 @@
+// app/page.js (or your page file path)
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
@@ -7,24 +8,36 @@ import secpicon from "@/assets/secpicon.png";
 import portfolioicon from "@/assets/portfoliogrowicon.png";
 import Image from "next/image";
 import { getTotalInvestedCapital, gettopstocks } from "@/lib/db/Positions";
+import { getStockPrice } from "@/actions/psxdata";
 
-async function getmovementpercentage(num) {
-  return num;
+// Math helper for percentage movement
+function getmovementpercentage(currentPrice, avgBuyPrice) {
+  if (!avgBuyPrice || avgBuyPrice === 0) {
+    return 0;
+  }
+  const movement = ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100;
+  return Number(movement.toFixed(2));
 }
 
-const renderStockBadge = async (symbol, num) => {
-  if (!symbol) return <span className="text-gray-400">N/A</span>;
+// Badge UI component
+const renderStockBadge = (stock) => {
+  if (!stock || !stock.symbol) {
+    return <span className="text-gray-400">N/A</span>;
+  }
 
-  const move = await getmovementpercentage(num);
-  console.log(move);
+  const move = getmovementpercentage(stock.currentPrice, stock.avgBuyPrice);
   const isPositive = move >= 0;
+
   return (
     <div className="flex items-center gap-2">
       <div>
-        <h1 className="font-bold text-white">{symbol}</h1>
+        <div className="flex justify-between items-center gap-4">
+          <h1 className="font-bold text-white">{stock.symbol}</h1>
+          
+        </div>
         <h1
-          className={`text-xs font-semibold px-2 rounded ${
-            isPositive ? "text-emerald-400" : " text-red-400"
+          className={`text-xs font-semibold px-2 rounded w-fit mt-1 ${
+            isPositive ? "text-emerald-400" : "text-red-400"
           }`}
         >
           {isPositive ? "+" : ""}
@@ -37,8 +50,20 @@ const renderStockBadge = async (symbol, num) => {
 
 const page = async () => {
   const total = await getTotalInvestedCapital(1);
-  const top = await gettopstocks();
-  const top1 = getmovementpercentage(+4);
+  const topStocks = await gettopstocks();
+
+  // Fetch current live prices from FastAPI and merge with database metrics
+  const topStocksData = await Promise.all(
+    topStocks.map(async (stock) => {
+      const priceData = await getStockPrice(stock.symbol);
+      const currentPrice = typeof priceData === "object" ? priceData?.price : priceData;
+
+      return {
+        ...stock,
+        currentPrice: Number(currentPrice) || 0,
+      };
+    })
+  );
 
   return (
     <div className="bg-black min-h-screen overflow-x-hidden">
@@ -91,28 +116,28 @@ const page = async () => {
                 <h1 className="text-neutral-400 font-semibold">
                   Total Portfolio value:{" "}
                 </h1>
-                <h1 className="text-[32px] font-bold">PKR {total}</h1>
+                <h1 className="text-[32px] font-bold">PKR {total?.toLocaleString()}</h1>
               </div>
             </div>
 
             {/* Top Left */}
-            <div className="absolute top-15 left-3 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-1 text-white shadow-lg">
-              <h1>{renderStockBadge(top[0], -2)}</h1>
+            <div className="absolute top-15 left-3 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-2 text-white shadow-lg">
+              {renderStockBadge(topStocksData[0])}
             </div>
 
             {/* Top Right */}
-            <div className="absolute top-17 right-5 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-1 text-white shadow-lg">
-              <h1>{renderStockBadge(top[1], +23)}</h1>
+            <div className="absolute top-17 right-5 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-2 text-white shadow-lg">
+              {renderStockBadge(topStocksData[1])}
             </div>
 
             {/* Bottom Left */}
-            <div className="absolute bottom-20 left-3 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-1 text-white shadow-lg">
-              <h1>{renderStockBadge(top[2], 10)}</h1>
+            <div className="absolute bottom-20 left-3 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-2 text-white shadow-lg">
+              {renderStockBadge(topStocksData[2])}
             </div>
 
             {/* Bottom Right */}
-            <div className="absolute bottom-13 right-2 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-1 text-white shadow-lg">
-              <h1>{renderStockBadge(top[3], 20)}</h1>
+            <div className="absolute bottom-13 right-2 bg-neutral-700 border border-neutral-600 rounded-xl px-5 py-2 text-white shadow-lg">
+              {renderStockBadge(topStocksData[3])}
             </div>
           </div>
         </div>

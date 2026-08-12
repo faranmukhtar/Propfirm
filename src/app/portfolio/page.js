@@ -7,6 +7,7 @@ import { getTraderById } from "@/lib/db/Traderqueries";
 import { getuserbyid } from "@/lib/db/Users";
 import AddStockPopup from "@/components/Addstockpopup";
 import RequestInstrumentapproval from "@/components/RequestInstrumentapproval";
+import { getStockPrice } from "@/actions/psxdata"; // Import your FastAPI price action
 
 function formatPKR(value) {
   return `PKR ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -35,43 +36,55 @@ export default async function PortfolioPage() {
   // Ensure portfolio is an array even if the DB returns null
   const portfolio = rawPortfolio || [];
 
-  console.log("MY DATABASE ROW LOOKS LIKE THIS:", portfolio[0]);
   const userdetails = isCustomer
     ? await getCustomerById(appUser.id)
     : isTrader
       ? await getTraderById(appUser.id)
       : null;
 
-  const enrichedPortfolio = portfolio.map((stock) => {
-    const qty = Number(stock.qty || stock.Quantity || 0);
-    const buyPrice = Number(stock.buy_price || stock.BuyingPrice || 0);
-    const currentPrice = Number(stock.current_price || stock.currentPrice || buyPrice);
+  // Fetch live prices from FastAPI and enrich the portfolio concurrently
+  const enrichedPortfolio = await Promise.all(
+    portfolio.map(async (stock) => {
+      const qty = Number(stock.qty || stock.Quantity || 0);
+      const buyPrice = Number(stock.buy_price || stock.BuyingPrice || 0);
 
-    const investedValue = qty * buyPrice;
-    const currentValue = qty * currentPrice;
-    const profitLoss = currentValue - investedValue;
-    const profitLossPercent = investedValue > 0 ? (profitLoss / investedValue) * 100 : 0;
+      // Read directly from the joined relation object
+      const symbol = stock.instruments?.symbol || "N/A";
+      const company = stock.instruments?.company_name || stock.instruments?.name || "Unknown";
 
-    // Read directly from the joined relation object
-    const symbol = stock.instruments?.symbol || "N/A";
-    const company = stock.instruments?.company_name || stock.instruments?.name || "Unknown";
+      // Fetch live current price from FastAPI
+      let currentPrice = buyPrice; // Fallback if fetch fails
+      if (symbol !== "N/A") {
+        try {
+          const priceData = await getStockPrice(symbol);
+          const parsedPrice = typeof priceData === "object" ? priceData?.price : priceData;
+          currentPrice = Number(parsedPrice) || buyPrice;
+        } catch (error) {
+          console.error(`Error fetching live price for ${symbol}:`, error);
+        }
+      }
 
-    return {
-      ...stock,
-      safeId: stock.id || Math.random().toString(),
-      safeSymbol: symbol,
-      safeCompany: company,
-      safeQty: qty,
-      safeBuyPrice: buyPrice,
-      safeCurrentPrice: currentPrice,
-      currentValue,
-      profitLoss,
-      profitLossPercent,
-    };
-  });
-    
+      const investedValue = qty * buyPrice;
+      const currentValue = qty * currentPrice;
+      const profitLoss = currentValue - investedValue;
+      const profitLossPercent = investedValue > 0 ? (profitLoss / investedValue) * 100 : 0;
 
-  // 2. Calculate dynamic totals using the clean data
+      return {
+        ...stock,
+        safeId: stock.id || Math.random().toString(),
+        safeSymbol: symbol,
+        safeCompany: company,
+        safeQty: qty,
+        safeBuyPrice: buyPrice,
+        safeCurrentPrice: currentPrice,
+        currentValue,
+        profitLoss,
+        profitLossPercent,
+      };
+    })
+  );
+
+  // Calculate dynamic totals using the clean live-priced data
   const totalInvested = enrichedPortfolio.reduce((sum, stock) => sum + (stock.safeQty * stock.safeBuyPrice), 0);
   const totalCurrentValue = enrichedPortfolio.reduce((sum, stock) => sum + stock.currentValue, 0);
   const totalProfitLoss = totalCurrentValue - totalInvested;
