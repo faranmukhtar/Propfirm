@@ -13,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Prefix route with /api so Vercel forwards correctly
 @app.get("/api/stock/{symbol}")
 def stock_price(symbol: str):
     stock = get_stock_price(symbol)
