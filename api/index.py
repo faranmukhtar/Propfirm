@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-# Use relative import since services/ is inside the api/ folder
 from .services.psx import get_stock_price, get_all_stocks
 
 app = FastAPI()
@@ -13,8 +12,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Route is /stock/{symbol} (Vercel automatically prepends /api)
-@app.get("/stock/{symbol}")
+# Use the /api prefix so Vercel's routing matches FastAPI's internal router
+@app.get("/api/stock/{symbol}")
 def stock_price(symbol: str):
     stock = get_stock_price(symbol)
     if stock is None:
@@ -22,4 +21,5 @@ def stock_price(symbol: str):
             status_code=404,
             detail=f"Stock {symbol.upper()} not found"
         )
-    return stock
+    # FastAPI will automatically convert this dict to JSON
+    return {"symbol": symbol.upper(), "price": stock}
