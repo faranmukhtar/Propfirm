@@ -8,7 +8,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",            # Your local development environment
     "http://127.0.0.1:3000",            # Alternative local address
-    "https://propfirm.vercel.app" # Replace this with your actual Vercel URL!
+    "https://propfirm-pi.vercel.app/" # Replace this with your actual Vercel URL!
 ]
 
 app.add_middleware(
