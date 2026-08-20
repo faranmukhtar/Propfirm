@@ -1,1 +1,0 @@
-print(stock_price("SYS"))
