@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .services.psx import get_stock_price, get_all_stocks
+from services.psx import get_stock_price, get_all_stocks
 
 app = FastAPI()
 
